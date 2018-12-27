@@ -67,6 +67,28 @@ var (
 // for mocking in unit tests
 var lookupIP = net.LookupIP
 
+var DefaultRegistry = DefaultNamespace
+
+func SetDefaultRegistry(defaultRegistry string) {
+	DefaultRegistry = defaultRegistry
+}
+
+// IndexServerName returns the name of default index server.
+func IndexServerName() string {
+	return DefaultRegistry
+}
+
+// IndexServerAddress returns index uri of default registry.
+func IndexServerAddress() string {
+	if IndexServerName() == IndexName {
+		return IndexServer
+	} else if IndexServerName() == "" {
+		return ""
+	} else {
+		return fmt.Sprintf("https://%s/v1/", IndexServerName())
+	}
+}
+
 // newServiceConfig returns a new instance of ServiceConfig
 func newServiceConfig(options ServiceOptions) (*serviceConfig, error) {
 	config := &serviceConfig{
@@ -227,12 +249,21 @@ skip:
 		}
 	}
 
-	// Configure public registry.
-	config.IndexConfigs[IndexName] = &registrytypes.IndexInfo{
-		Name:     IndexName,
-		Mirrors:  config.Mirrors,
-		Secure:   true,
-		Official: true,
+	if DefaultNamespace == DefaultRegistry {
+		// Configure public registry.
+		config.IndexConfigs[IndexName] = &registrytypes.IndexInfo{
+			Name:     IndexName,
+			Mirrors:  config.Mirrors,
+			Secure:   true,
+			Official: true,
+		}
+	} else {
+		config.IndexConfigs[DefaultRegistry] = &registrytypes.IndexInfo{
+			Name:     DefaultRegistry,
+			Mirrors:  config.Mirrors,
+			Secure:   isSecureIndex(config, DefaultRegistry),
+			Official: false,
+		}
 	}
 
 	return nil

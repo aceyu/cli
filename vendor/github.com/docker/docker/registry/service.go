@@ -110,7 +110,7 @@ func (s *DefaultService) Auth(ctx context.Context, authConfig *types.AuthConfig,
 	// TODO Use ctx when searching for repositories
 	serverAddress := authConfig.ServerAddress
 	if serverAddress == "" {
-		serverAddress = IndexServer
+		serverAddress = IndexServerAddress()
 	}
 	if !strings.HasPrefix(serverAddress, "https://") && !strings.HasPrefix(serverAddress, "http://") {
 		serverAddress = "https://" + serverAddress

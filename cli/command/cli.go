@@ -19,6 +19,7 @@ import (
 	registryclient "github.com/docker/cli/cli/registry/client"
 	"github.com/docker/cli/cli/trust"
 	dopts "github.com/docker/cli/opts"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/api/types"
 	registrytypes "github.com/docker/docker/api/types/registry"
@@ -207,6 +208,14 @@ func (cli *DockerCli) initializeFromClient() {
 		OSType:          ping.OSType,
 	}
 	cli.client.NegotiateAPIVersionPing(ping)
+
+	info, err := cli.client.Info(context.Background())
+	if err == nil {
+		configs := info.RegistryConfig.IndexConfigs
+		for _, indexInfo := range configs {
+			reference.DefaultDomain = indexInfo.Name
+		}
+	}
 }
 
 func getClientWithPassword(passRetriever notary.PassRetriever, newClient func(password string) (client.APIClient, error)) (client.APIClient, error) {
